@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    var a = {
+      obj: 12
+    }
+    var originData = {
+      data: {
+        a: {
+          name: {
+            age: 13
+          }
+        },
+        b: '2',
+        c: '3'
+      },
+      watch: {
+        'a.name.age': function (new1, new2) {},
+        b: function (new1, new2) {},
+        c: function (new1, new2) {}
+      }
+    }
+    observe(originData)
+
+    function observe(page) {
+      let data = page.data;
+      let watch = page.watch;
+      Object.keys(watch).forEach(v => {
+        let key = v.split('.');
+        let nowData = data;
+        for (let i = 0; i < key.length - 1; i++) {
+          nowData = nowData[key[i]];
+        }
+        let lastKey = key[key.length - 1];
+        let watchFun = watch[v].handler || watch[v];
+        let deep = watch[v].deep;
+        defineRactive(nowData, lastKey, watchFun, deep, page);
+      })
+    }
+    /**
+     * 监听属性 并执行监听函数
+     */
+    function defineRactive(obj, key, watchFun, deep, page) {
+      var val = obj[key];
+      if (deep && val != null && typeof val === 'object') {
+        Object.keys(val).forEach(childKey => {
+          defineRactive(val, childKey, watchFun, deep, page);
+        })
+      }
+      let that = this;
+      Object.defineProperty(obj, key, {
+        configurable: true,
+        enumerable: true,
+        set: function (value) {
+          watchFun.call(page, value, val);
+          val = value;
+        },
+        get: function () {
+          return val;
+        }
+      })
+    }  
+  </script>
+</body>
+
+</html>
